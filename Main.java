@@ -1,6 +1,5 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import javax.swing.*;
 
 public class Main extends JFrame {
     Warehouse warehouse = new Warehouse("Undsen Aguulah");
@@ -10,7 +9,7 @@ public class Main extends JFrame {
     JTextArea outputArea;
     JComboBox<Location> fromCombo;
     JComboBox<Location> toCombo;
-    JTextField productName, productPrice, productQty, productCat;
+    JTextField productName, productPrice, productQty, productCat, productBarcode;
 
     public Main() {
         setTitle("Warehouse Management");
@@ -22,11 +21,12 @@ public class Main extends JFrame {
         warehouse.addLocation(locB);
 
         // 🟦 Top: Add Product
-        JPanel topPanel = new JPanel(new GridLayout(5, 2));
+        JPanel topPanel = new JPanel(new GridLayout(6, 2));
         productName = new JTextField();
         productPrice = new JTextField();
         productQty = new JTextField();
         productCat = new JTextField();
+        productBarcode = new JTextField();
         JButton addBtn = new JButton("Add to A");
 
         topPanel.add(new JLabel("Name:"));
@@ -37,10 +37,13 @@ public class Main extends JFrame {
         topPanel.add(productQty);
         topPanel.add(new JLabel("Category:"));
         topPanel.add(productCat);
+        topPanel.add(new JLabel("Barcode:"));
+        topPanel.add(productBarcode);
         topPanel.add(addBtn);
 
         // 🟩 Center: Output
         outputArea = new JTextArea();
+        outputArea.setEditable(false);
         JScrollPane scroll = new JScrollPane(outputArea);
 
         // 🟥 Bottom: Move
@@ -57,23 +60,31 @@ public class Main extends JFrame {
 
         // 🔷 Add listeners
         addBtn.addActionListener(e -> {
-            String name = productName.getText();
-            double price = Double.parseDouble(productPrice.getText());
-            int qty = Integer.parseInt(productQty.getText());
-            String cat = productCat.getText();
-            Product p = new Product(name, price, qty, cat);
-            locA.addProduct(p);
-            showAll();
+            try {
+                String name = productName.getText();
+                double price = Double.parseDouble(productPrice.getText());
+                int qty = Integer.parseInt(productQty.getText());
+                String cat = productCat.getText();
+                String barcode = productBarcode.getText();
+                Product p = new Product(name, price, qty, cat, barcode);
+                locA.addProduct(p);
+                clearInputFields();
+                showAll();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Price болон Quantity утга зөв оруулна уу!");
+            }
         });
 
         moveBtn.addActionListener(e -> {
             Location from = (Location) fromCombo.getSelectedItem();
             Location to = (Location) toCombo.getSelectedItem();
-            if (!from.getProducts().isEmpty()) {
+            if (from != null && to != null && !from.getProducts().isEmpty()) {
                 Product p = from.getProducts().get(0);
                 new StockMove(from, to).moveProduct(p);
+                showAll();
+            } else {
+                JOptionPane.showMessageDialog(this, "Сонгогдсон 'From' агуулах хоосон байна эсвэл буруу сонгогдсон байна.");
             }
-            showAll();
         });
 
         add(topPanel, BorderLayout.NORTH);
@@ -81,6 +92,14 @@ public class Main extends JFrame {
         add(movePanel, BorderLayout.SOUTH);
 
         showAll();
+    }
+
+    private void clearInputFields() {
+        productName.setText("");
+        productPrice.setText("");
+        productQty.setText("");
+        productCat.setText("");
+        productBarcode.setText("");
     }
 
     public void showAll() {
